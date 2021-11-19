@@ -6,3 +6,4 @@ class FileLocs(object):
         self.data_loc = '../data/'
         self.cls_fname   = self.data_loc + 'groupCatalog_Yang_deCarvalho2017.csv'
         self.gal_fname0  = self.data_loc + 'groupCatalog_Yang_deCarvalho2017_galaxy.csv'
+        self.gal_fname1  = self.data_loc + 'groupCatalog_Yang_deCarvalho2017_galaxy_v1.csv'
