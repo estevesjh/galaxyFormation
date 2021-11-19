@@ -1,70 +1,73 @@
 ----------------------------------------------
 
-Data from SDSS + SPIDERS
+Data from SDSS + Yang et al. 2005 + deCarvalho et al. 2017
 
 ----------------------------------------------
 
 HOW DATA WAS CONSTRUCTED:
 
-	1. Cluster data (from catCluster-SPIDERS_RASS_CLUS-v3.0.fits) is joined
-	with BCG data (from SpidersXclusterBCGs-v2.0.fits). Some clusters are
-	dropped out because no BCG data.
+	1. Cluster data (from groupCatalog_Yang_deCarvalho2017.fits) 
+    is uploaded from the deCarvalho et al. 2017 paper. 
 
-	2. Use astroquery to query SDSS galaxies within 2*R200c of each cluster. R200c
-	estimated from Lx assuming an X-ray Luminosity --- halo mass relation.
+	2. Using the query (getClusterGalaxies.sql) on the CasJobs (SDSS) platform 
+    I uploaded all the galaxies within 2xR200 in the photometric (photoObjAll) 
+    and spectroscopic (specObjAll).
+
+    3. The derived spectral quantites are taken from two tables, galSpecExtra (MPA-JHU SDSS DR7)
+    and eBOSS/SDSS firefly (DR14/DR16).
 
 
 HOW TO READ THIS DATA:
 
-	The HDF5 files were written using the pandas python package.
-	You can quickly load them and turn them into 2D numpy arrays
-	using the following commands:
+    The csv and fits can be read with astropy
 
-	*****
-
-	import pandas as pd
-	import numpy as np
-
-	Galaxy_data  = pd.read_hdf('Data/SPIDERS_Dataset.hdf5', key = 'Galaxies').to_numpy()
-	Cluster_data = pd.read_hdf('Data/SPIDERS_Dataset.hdf5', key = 'Clusters').to_numpy()
-
-
-	*****
-
-	Each of 'Galaxy_data' and 'Cluster_data' will be a 2D numpy array 
-	that you can index into using slicing.
-
-	If you leave them as pandas dataframes you can also quickly access
-	an individual column and turn it into a numpy array via:
-
-	******
-
-	Pandas_Series = Galaxy_data  [quantity_name]
-	Numpy_array   = Galaxy_data  [quantity_name].values
-
-	
-	******
-
-
-NOTES:
-	1. 
+    Under construstion
 
 ---------------------------------------
 
-Cluster Catalog properties
+Spectral Catalog properties
 
 ---------------------------------------
+---------------------------------------
+A: MPA-JHU SDSS DR7 
 
-CLUZSPEC: Spectroscopic redshift of cluster BCG
+The catalog have their estimations of stellar mass, star formation rate (SFR), specific SFR and BPT class.
+Also, the 16 and 84 percentiles of each quantity. 
 
+For more information: https://www.sdss.org/dr16/spectro/galaxy_mpajhu/
+
+The files and tables above also include a number of galaxy parameters derived by the MPA-JHU group available.
+•	BPT classification: We supply emission line classifications based on the BPT diagram. 
+    Galaxies are divided into “Star Forming”, “Composite”, “AGN”, “Low S/N Star Forming”, 
+    “Low S/N AGN”, and “Unclassifiable” categories.
+•	Stellar Mass: Stellar masses are calculated using the Bayesian methodology and model grids described 
+    in Kauffmann et al. (2003). The spectra are measured through a 3 arcsec aperture, and therefore 
+    do not represent the entire galaxy. We therefore base our model on the ugriz galaxy photometry 
+    alone (rather than the spectral indices Dn(4000) and Hδ used by Kauffmann et al. 2003). 
+    We have corrected the photometry for the small contribution due to nebular emission using the spectra. 
+    We estimate the stellar mass within the SDSS spectroscopic fiber aperture using fiber magnitudes and 
+    the total stellar mass using model magnitudes. A Kroupa (2001) initial mass function is assumed. 
+    We output the stellar mass corresponding to the median and 2.5%, 16%, 84%, 97.5% of the probability 
+    distribution function.
+•	Star Formation Rate: Star formation rates (SFRs) are computed within the galaxy fiber aperture 
+    using the nebular emission lines as described in Brinchmann et al. (2004). SFRs outside of the fiber 
+    are estimated using the galaxy photometry following Salim et al. (2007). For AGN and galaxies with 
+    weak emission lines, SFRs are estimated from the photometry. We report both the fiber SFR and 
+    the total SFR at the median and 2.5%, 16%, 84%, 97.5% of the probability distribution function.
+•	Specific SFR: The Specific SFR (SFR divided by the stellar mass) has been calculated by combining 
+    the SFR and stellar mass likelihood distributions as outlined in Appendix A of Brinchmann et al. (2004). 
+    We report both the fiber and the total specific SFR at the median and 2.5%, 16%, 84%, 97.5% of 
+    the probability distribution function.
 
 ---------------------------------------
-
-Galaxy catalog properties
 ---------------------------------------
+B: eBOSS SDSS firefly
 
-CLUS_ID: The SPIDERS ID of the cluster. Can use this to join Cluster Catalog properties
-	 with the Galaxy Catalog.
+The firefly code is spectral energy density (SED) fitting code. So their estimated quantities are based on
+the spectrum information not on the photometry information as in A. We use their mass and age estimations.
+I could not find their star formation history estimation altough they describe in their paper (Comparat et al. 2017)
 
-v_los: 	Line of sight velocity of galaxy (in km/s) with respect to cluster BCG.
- 	Computed as v_los = c*(1/1000)*(z_gal - z_BCG])/(1 + z_BCG)
+For more information: https://www.sdss.org/dr16/spectro/eboss-firefly-value-added-catalog/#DR16Products
+
+
+
