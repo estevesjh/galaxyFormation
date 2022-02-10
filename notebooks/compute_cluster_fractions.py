@@ -57,7 +57,7 @@ m200 = np.array(gal['M200'])
 
 # Po = np.where(gal['Rn']>=1,0.,Po)
 # Pi = np.where(gal['Rn']<=1,0.,Pi)
-Pn = np.where(gal['Rn']<=1,0.,Pn)
+Pn = np.where(gal['Rn']<=2.,0.,Pn)
 
 # quenched, spiral, SO, bulge, disco, barra, merger
 # star forming, liners, AGN
@@ -103,6 +103,36 @@ for l, p in zip(labels, probs):
     cat['qf2_'+l+'_err'] = qfrac_on[1]
     cat['qf3_'+l] = qfrac_in[0]
     cat['qf3_'+l+'_err'] = qfrac_in[1]
+
+print('Compute Quenched Fractions')
+l = 'spiral_quenching'
+p = qf
+Po*= sp
+Pi*= sp
+Pn*= sp
+
+frac_o = np.array([compute_fraction2(Po[idx],p[idx]) for idx in keys]).T
+frac_i = np.array([compute_fraction2(Pi[idx],p[idx]) for idx in keys]).T
+frac_n = np.array([compute_fraction2(Pn[idx],p[idx]) for idx in keys]).T
+
+qfrac_oi = quenching_fraction_excess(frac_i, frac_o)
+qfrac_on = quenching_fraction_excess(frac_n, frac_o)
+qfrac_in = quenching_fraction_excess(frac_n, frac_i)
+
+# save
+cat['fo_'+l] = frac_o[0]
+cat['fo_'+l+'_err'] = frac_o[1]
+cat['fi_'+l] = frac_i[0]
+cat['fi_'+l+'_err'] = frac_i[1]
+cat['fn_'+l] = frac_n[0]
+cat['fn_'+l+'_err'] = frac_n[1]
+
+cat['qf1_'+l] = qfrac_oi[0]
+cat['qf1_'+l+'_err'] = qfrac_oi[1]
+cat['qf2_'+l] = qfrac_on[0]
+cat['qf2_'+l+'_err'] = qfrac_on[1]
+cat['qf3_'+l] = qfrac_in[0]
+cat['qf3_'+l+'_err'] = qfrac_in[1]
 
 print('Save file')        
 cat.write(cluster_file_2,overwrite=True)
