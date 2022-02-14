@@ -16,52 +16,48 @@ tbins = np.logspace(8.2,11.2,11)/1e9/2.   #infall time
 mrpbins = np.linspace(-3.,7.,11)
 
 from file_loc import FileLocs
-fl = FileLocs()
-galaxy_file = fl.gal_fname1
-cluster_file = fl.cls_fname
-outfile_base = fl.data_loc+'tmp/{label}_{var}.npy'
+fl = FileLocs(dataset='tng')
+# galaxy_file = fl.gal_fname1
+# cluster_file = fl.cls_fname
+outfile_base = fl.data_loc+'tmp/tng/{label}_{var}.npy'
 
 print('--------Initial Files-------')
-print('Cluster File : %s' % cluster_file)
-print('Galaxy File : %s' % galaxy_file)
-print()
+cat = fl.cat
+gal0 = fl.gal0
 
-# load catalogs
-cat = at.read(cluster_file)
-gal0 = at.read(galaxy_file)
-
+print(gal0.colnames)
 mask = np.abs(gal0['vlosn']) <= 3.
 gal = gal0[mask].copy()
 
 print('Seting Variables')
 print()
-cid = np.array(cat['Yang'])
-gid = np.array(gal['Yang'])
+cid = np.array(cat['HaloID'])
+gid = np.array(gal['HostHaloID'])
 
 rn = np.array(gal['Rn'])
 mass = np.array(gal['mass'])
-t_infall = np.array(gal['t_infall'])/1e9
-morph_type = np.array(gal['TType'])
+t_infall = np.array(gal['t_cross'])/1e9
+#morph_type = np.array(gal['TType'])
 
 # sfr classification
 sf   = np.array(gal['SF']).astype(int)
 qf   = (1-sf).astype(int)
 
 # morphological classification
-sp   = np.where(gal['TType'] > 0, 1, 0).astype(int)
-ell  = np.where(gal['TType'] <=0, 1, 0).astype(int)
-s0   = check_non_valid_number(gal['PS0'])
-bulge= check_non_valid_number(gal['Pbulge'])
-disk = check_non_valid_number(gal['Pdisk'])
-bar  = check_non_valid_number(gal['PbarGZ2'])
-merger= check_non_valid_number(gal['Pmerg'])
+# sp   = np.where(gal['TType'] > 0, 1, 0).astype(int)
+# ell  = np.where(gal['TType'] <=0, 1, 0).astype(int)
+s0   = check_non_valid_number(gal['BT'])
+# bulge= check_non_valid_number(gal['Pbulge'])
+# disk = check_non_valid_number(gal['Pdisk'])
+# bar  = check_non_valid_number(gal['PbarGZ2'])
+# merger= check_non_valid_number(gal['Pmerg'])
 
-# bpt classification
-composite = (np.array(gal['bpt']) == 3).astype(int)
-lsf = ((np.array(gal['bpt']) == 1) | (np.array(gal['bpt']) == 2)).astype(int)
-liners = (np.array(gal['bpt']) == 5).astype(int)
-agn = (np.array(gal['bpt']) == 4).astype(int)
-unclass = (np.array(gal['bpt']) == -1).astype(int)
+# # bpt classification
+# composite = (np.array(gal['bpt']) == 3).astype(int)
+# lsf = ((np.array(gal['bpt']) == 1) | (np.array(gal['bpt']) == 2)).astype(int)
+# liners = (np.array(gal['bpt']) == 5).astype(int)
+# agn = (np.array(gal['bpt']) == 4).astype(int)
+# unclass = (np.array(gal['bpt']) == -1).astype(int)
 
 # orbital classification
 Pi   = np.array(gal['pinfall'])
@@ -75,11 +71,10 @@ m200 = np.array(gal['M200'])
 # star forming, liners, AGN
 # mass > 10. & mass z limited
 
-labels_mpr = ['quenching','sf', 'elliptical', 'spiral', 's0', 'bulge', 'disk', 'bar', 'merger']
-labels_bpt = ['lsf', 'liners', 'agn', 'compos', 'unclas']
+labels_mpr = ['quenching','sf','bulge']
+# labels_bpt = ['lsf', 'liners', 'agn', 'compos', 'unclas']
 
-mask_mpr = [qf, sf, ell,sp, s0, bulge, disk, bar, merger]
-mask_bpt = [lsf, liners, agn, composite, unclass]
+mask_mpr = [qf, sf, s0]
 
 print('Compute Fractions')
 print()
@@ -90,11 +85,11 @@ from utils import compute_fraction, quenching_fraction_excess, save_output_matri
 mskeys, mmed = make_bins(mass, msbins)
 rkeys, rmed  = make_bins(rn, rbins)
 tkeys, tmed = make_bins(t_infall, tbins)
-mrpkeys, mrpmed = make_bins(morph_type, mrpbins)
+# mrpkeys, mrpmed = make_bins(morph_type, mrpbins)
 
 # for each halo compute cluster, infall and interlopers fraction.
-labels = labels_mpr+labels_bpt
-probs = mask_mpr+mask_bpt
+labels = labels_mpr#+labels_bpt
+probs = mask_mpr#+mask_bpt
 
 print('Stellar Mass')
 for l, p in zip(labels, probs):
@@ -147,21 +142,21 @@ for l, p in zip(labels, probs):
     save_output_matrix([tmed, frac_o, frac_i, frac_n, qfrac_oi, qfrac_on, qfrac_in], outfile)
 print()
 
-print('Morphological Type')
-for l, p in zip(labels, probs):
-    outfile = outfile_base.format(label=l, var='morhp')
-    print('Label: %s' % l)
-    print('outfile: %s' % outfile)
-    frac_o = np.array([compute_fraction1(Po[idx],p[idx]) for idx in mrpkeys]).T
-    frac_i = np.array([compute_fraction1(Pi[idx],p[idx]) for idx in mrpkeys]).T
-    frac_n = np.array([compute_fraction1(Pn[idx],p[idx]) for idx in mrpkeys]).T
+# print('Morphological Type')
+# for l, p in zip(labels, probs):
+#     outfile = outfile_base.format(label=l, var='morhp')
+#     print('Label: %s' % l)
+#     print('outfile: %s' % outfile)
+#     frac_o = np.array([compute_fraction1(Po[idx],p[idx]) for idx in mrpkeys]).T
+#     frac_i = np.array([compute_fraction1(Pi[idx],p[idx]) for idx in mrpkeys]).T
+#     frac_n = np.array([compute_fraction1(Pn[idx],p[idx]) for idx in mrpkeys]).T
  
-    qfrac_oi = quenching_fraction_excess(frac_i, frac_o)
-    qfrac_on = quenching_fraction_excess(frac_n, frac_o)
-    qfrac_in = quenching_fraction_excess(frac_n, frac_i)
+#     qfrac_oi = quenching_fraction_excess(frac_i, frac_o)
+#     qfrac_on = quenching_fraction_excess(frac_n, frac_o)
+#     qfrac_in = quenching_fraction_excess(frac_n, frac_i)
     
-    # save
-    save_output_matrix([mrpmed, frac_o, frac_i, frac_n, qfrac_oi, qfrac_on, qfrac_in], outfile)
-print()
+#     # save
+#     save_output_matrix([mrpmed, frac_o, frac_i, frac_n, qfrac_oi, qfrac_on, qfrac_in], outfile)
+# print()
 
-print('done!')
+# print('done!')
