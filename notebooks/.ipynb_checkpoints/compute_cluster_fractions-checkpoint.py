@@ -55,8 +55,9 @@ Po   = np.array(gal['porbital'])
 Pn   = np.array(gal['pinterloper'])
 m200 = np.array(gal['M200'])
 
-Po = np.where(gal['Rn']>=1,0.,Po)
-Pi = np.where(gal['Rn']<=1,0.,Pi)
+# Po = np.where(gal['Rn']>=1,0.,Po)
+# Pi = np.where(gal['Rn']<=1,0.,Pi)
+Pn = np.where(gal['Rn']<=1,0.,Pn)
 
 # quenched, spiral, SO, bulge, disco, barra, merger
 # star forming, liners, AGN
