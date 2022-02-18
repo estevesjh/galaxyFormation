@@ -26,6 +26,7 @@ gal0 = fl.gal0
 
 print(gal0.colnames)
 mask = np.abs(gal0['vlosn']) <= 3.
+mask &= np.array(gal0['mass'])>10.05
 gal = gal0[mask].copy()
 
 print('Seting Variables')
