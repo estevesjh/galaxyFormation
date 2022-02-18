@@ -22,6 +22,7 @@ cat = at.read(cluster_file)
 gal0 = at.read(galaxy_file)
 
 mask = np.abs(gal0['vlosn']) <= 3.
+mask&= np.array(gal0['mass'])>=10.05
 gal = gal0[mask].copy()
 
 print('Seting Variables')
