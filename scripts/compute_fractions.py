@@ -103,3 +103,10 @@ def save_output(var,outfile,q1=16,q3=84):
         out[ii+1] = out[ii]-np.nanpercentile(x,q1,axis=1)
         out[ii+2] = np.nanpercentile(x,q3,axis=1)-out[ii]
     np.savetxt(outfile, out.T, fmt='%.5f')
+
+# q = computeFraction('quenching',path=fl.data_loc)
+# q.add_probabilities(qf,Po,Pi,Pn)
+# q.run('smass',mass,msbins,write=True,nBootStrap=500)
+# q.run('cross_time',t_infall,tbins,write=True,nBootStrap=500)
+# q.run('radii',rn,rbins,write=True,nBootStrap=500)
+# q.run('ttype',morph_type,mrpbins,write=True,nBootStrap=500)
