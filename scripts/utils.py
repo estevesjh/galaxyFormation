@@ -8,6 +8,17 @@ msbins = np.arange(9.0,12.25,0.25)
 ## radii bins
 rbins = np.arange(0.,3.25,0.25)
 
+def compute_kde(x,weights,bw=0.1):
+    Norm = np.nansum(weights)
+    pdf = gaussian_kde(x, weights=weights, bw_method=bw)
+    return pdf, Norm
+
+def compute_fraction_kde(xvec,x,p1,p2,bw=None,eps=1e-9):
+    pdf1, N1 = compute_kde(x, p1, bw=bw)
+    pdf2, N2 = compute_kde(x, p1*p2, bw=bw)
+    frac = N2*pdf2(xvec)/(N1*pdf1(xvec))
+    return frac
+
 def compute_fraction(prob,eps=1e-6):
     N1, N2 = np.nansum(prob), prob[~np.isnan(prob)].size
     frac = N1/N2

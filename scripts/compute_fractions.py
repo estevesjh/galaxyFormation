@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from utils import gaussian_kde
 
 class computeFraction:
     """This class provides a set of calculantions to compute the fraction and bootstrap errors
@@ -54,7 +55,49 @@ class computeFraction:
             self.write(outfile, var, q1=16, q3=84)
             
         pass
-    
+
+    def run_kde(self, xlabel, xvar, xbins, bw=None, nBootStrap=10, write=False):
+        # set bins
+        nbins = xbins.size
+        self.data[xlabel] = xvar
+        
+        # initiate dataframe
+        df = pd.DataFrame(self.data)
+        
+        # initiate output arrays
+        self.initiate_arrays(nsize=nbins, nBootStrap=nBootStrap)
+        
+        # compute fraction
+        for i in range(nBootStrap):
+            vec = df.sample(frac=1.0, replace=True).to_numpy().T
+            #vec = df.to_numpy().T
+            
+            frac1 = compute_fraction_kde(xbins, vec[-1], vec[1], vec[0], bw=bw)
+            frac2 = compute_fraction_kde(xbins, vec[-1], vec[2], vec[0], bw=bw)
+            frac3 = compute_fraction_kde(xbins, vec[-1], vec[3], vec[0], bw=bw)
+            
+            qfrac1 = quenching_fraction_excess(frac2, frac1)
+            qfrac2 = quenching_fraction_excess(frac3, frac1)
+            qfrac3 = quenching_fraction_excess(frac3, frac2)
+
+            self.frac1[:, i] = frac1
+            self.frac2[:, i] = frac2
+            self.frac3[:, i] = frac3
+        
+            self.qfrac1[:, i] = qfrac1
+            self.qfrac2[:, i] = qfrac2
+            self.qfrac3[:, i] = qfrac3
+        
+        self.xmed = xbins
+        
+        if write:
+            var = [self.xmed, self.frac1, self.frac2, self.frac3,\
+                   self.qfrac1, self.qfrac2, self.qfrac3]
+            outfile = f'{self.path}/tmp/{xlabel}_{self.name}.npy'
+            self.write(outfile, var, q1=16, q3=84)
+            
+        pass
+
     def write(self, outfile, var, q1=16, q3=84):
         save_output(var, outfile, q1=q1, q3=q3)
     
@@ -83,10 +126,23 @@ def compute_fraction(prob1, prob2, eps=1e-3):
         frac = np.nan
     return frac
 
+def compute_kde(x,weights,bw=0.1):
+    Norm = np.nansum(weights)
+    pdf = gaussian_kde(x, weights=weights, bw_method=bw)
+    return pdf, Norm
+
+def compute_fraction_kde(xvec,x,p1,p2,bw=None,eps=1e-3):
+    pdf1, N1 = compute_kde(x, p1, bw=bw)
+    pdf2, N2 = compute_kde(x, p1*p2, bw=bw)
+    denumerator = N1*pdf1(xvec)
+    frac = N2*pdf2(xvec)/denumerator
+    frac = np.where(denumerator<eps, np.nan, frac)
+    return frac
+
 def quenching_fraction_excess(fq1,fq2):
     dfrac = fq2-fq1
     qfe = dfrac/(1-fq1)
-    qfe = np.where(fq1==1,np.nan,qfe)
+    qfe = np.where(fq1==1,-1.,qfe)
     qfe = np.where(qfe>1, 1., qfe)
     qfe = np.where(qfe<-1, -1., qfe)
     return qfe
