@@ -74,44 +74,45 @@ def vcirc(mass,redshift,mdef,cosmo):
     a = v.to(u.km/u.s)
     return a.value
 
-print('Starting Code')
-fl = FileLocs(dataset='sdss')
-data = fl.load_catalogs('cluster/raw')
+if __name__ == "__main__":
+    print('Starting Code')
+    fl = FileLocs(dataset='sdss')
+    data = fl.load_catalogs('cluster/raw')
 
-cid = np.array(data['Yang'])
-ra = np.array(data['_RAJ2000'])
-dec = np.array(data['_DEJ2000'])
+    cid = np.array(data['Yang'])
+    ra = np.array(data['_RAJ2000'])
+    dec = np.array(data['_DEJ2000'])
 
-zcls = np.array(data['<z>'])
-r200c = np.array(data['R200'])/h
-m200c = np.array(10**data['logM200'])/h
-n200 = np.array(data['N200'])
+    zcls = np.array(data['<z>'])
+    r200c = np.array(data['R200'])/h
+    m200c = np.array(10**data['logM200'])/h
+    n200 = np.array(data['N200'])
 
-da     = AngularDistance(zcls)
+    da     = AngularDistance(zcls)
 
-print('Converting to R200m')
-out = [convert_mass_defs(Mi,zi,'200m') for Mi,zi in zip(m200c,zcls)]
-m200m = np.array([line[0] for line in out])
-r200m = np.array([line[1]/1000. for line in out])
-c200m = np.array([line[2] for line in out])
+    print('Converting to R200m')
+    out = [convert_mass_defs(Mi,zi,'200m') for Mi,zi in zip(m200c,zcls)]
+    m200m = np.array([line[0] for line in out])
+    r200m = np.array([line[1]/1000. for line in out])
+    c200m = np.array([line[2] for line in out])
 
-thetaR200c = (r200c*h/da)*(180/np.pi)
-thetaR200m = (r200m*h/da)*(180/np.pi)
+    thetaR200c = (r200c*h/da)*(180/np.pi)
+    thetaR200m = (r200m*h/da)*(180/np.pi)
 
-vcirc_c   = vcirc(m200c,zcls,'200c',astropy_cosmo)
-vcirc_m   = vcirc(m200m,zcls,'200m',astropy_cosmo)
+    vcirc_c   = vcirc(m200c,zcls,'200c',astropy_cosmo)
+    vcirc_m   = vcirc(m200m,zcls,'200m',astropy_cosmo)
 
-print('Converting to SDSS input')
-# Yang,RA,DEC,z,logM200,R200,thetaR200,N200
-columns = ['Yang','RA','DEC','redshift','logM200','thetaR200','thetaR200m']
-sdss = Table.QTable([cid,ra,dec,zcls,np.log10(m200c),thetaR200c,thetaR200m],names=columns)
-sdss.write(fl.cluster_sdss,format='csv',overwrite=True)
-print('SDSS table')
-sdss
+    print('Converting to SDSS input')
+    # Yang,RA,DEC,z,logM200,R200,thetaR200,N200
+    columns = ['Yang','RA','DEC','redshift','logM200','thetaR200','thetaR200m']
+    sdss = Table.QTable([cid,ra,dec,zcls,np.log10(m200c),thetaR200c,thetaR200m],names=columns)
+    sdss.write(fl.cluster_sdss,format='csv',overwrite=True)
+    print('SDSS table')
+    sdss
 
-print('Creating main catalog table')
-columns = ['Yang','RA','DEC','redshift','N200','logM200c','logM200m','R200c','R200m']
-cat = Table.QTable([cid,ra,dec,zcls,n200,np.log10(m200c),np.log10(m200m),r200c,r200m],names=columns)
-cat.write(fl.cluster,format='csv',overwrite=True)
-print('Cluster main table')
-cat
+    print('Creating main catalog table')
+    columns = ['Yang','RA','DEC','redshift','N200','logM200c','logM200m','R200c','R200m','thetaR200','thetaR200m',"vcirc_c","vcirc_m"]
+    cat = Table.QTable([cid,ra,dec,zcls,n200,np.log10(m200c),np.log10(m200m),r200c,r200m,thetaR200c,thetaR200m,vcirc_c,vcirc_m],names=columns)
+    cat.write(fl.cluster,format='csv',overwrite=True)
+    print('Cluster main table')
+    cat
