@@ -14,17 +14,15 @@ class FileLocs(object):
             self.cluster_raw = self.data_loc + 'groupCatalog_Yang_deCarvalho2017.fits'
             self.cluster_sdss = self.data_loc + 'groupCatalog_Yang_deCarvalho2017_toSDSS.csv'
             
-            self.galaxy = self.data_loc + 'groups_deCarvalho2017_galaxies_final_flag_johnnyheq.csv'
-            self.galaxy_vl = self.data_loc + 'groups_deCarvalho2017_galaxies_final_flag_johnnyheq_volumeLimited_v1.csv'
+            self.galaxy_raw = self.data_loc + 'groups_deCarvalho2017_R200m_galaxies_final_flag_johnnyheq.csv'
+            self.galaxy = self.data_loc + 'groups_deCarvalho2017_R200m_galaxies_final_flag_johnnyheq_pp.csv'
+            self.galaxy_vl = self.data_loc + 'groups_deCarvalho2017_galaxies_final_flag_johnnyheq_pp_volumeLimited_v1.csv'
         
             self.morphology = self.data_loc + 'DL_morphology_SDSS_DS18.fit'
 
             self.datasets = {'cluster/raw': [self.cluster_raw,'fits'], 'cluster/main': [self.cluster,'csv'], 'cluster/sdss/': [self.cluster,'csv'],
-                             'galaxy/raw': [self.galaxy, 'csv']}
-            # load catalogs
-            # self.cat = at.read(self.cls_fname)
-            # self.gal0 = at.read(self.gal_fname1)
-
+                             'galaxy/raw': [self.galaxy_raw, 'csv'], 'galaxy/main': [self.galaxy_raw, 'csv'], 'galaxy/volumeLimited': [self.galaxy_raw, 'csv']}
+            
         if dataset=='tng':
             self.data_loc = '../data/TNG/'
             self.hdf_fname_z0 = self.data_loc + 'TNG300-1_GalEvol_z0p00.hdf5'
