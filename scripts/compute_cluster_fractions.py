@@ -2,89 +2,64 @@
 import numpy as np
 import astropy.io.ascii as at
 
+import sys
+sys.path.append('./scripts')
 from utils import compute_fraction2, quenching_fraction_excess, chunks, check_non_valid_number
-
 from file_loc import FileLocs
-fl = FileLocs(dataset='tng')
 
-## stellar mass bin
-msbins = np.arange(9.0,12.25,0.25)
+fl = FileLocs(dataset='sdss')
+cat = fl.load_catalogs('cluster/main')
+gal0 = fl.load_catalogs('galaxy/main')
 
-## radii bins
-rbins = np.arange(0.,3.25,0.25)
+mask  = (gal0['VLOS_MASK']).astype(bool)
+mask &= gal0['VOLUME_LIM_MASK'].astype(bool)
 
-## free fall time bins
-tbins = np.logspace(8.2,11.2,11)/1e9/2.   #infall time
-
-print('--------Initial Files-------')
-cluster_file = fl.cls_fname
-cluster_file_2 = cluster_file.split('.csv')[0]+'_frac.csv'
-print('Cluster File %s'%cluster_file_2)
-
-cat = fl.cat
-gal0 = fl.gal0
-
-print(gal0.colnames)
-mask = np.abs(gal0['vlosn']) <= 3.
-mask &= np.array(gal0['mass'])>10.05
 gal = gal0[mask].copy()
 
 print('Seting Variables')
 print()
-cid = np.array(cat['HaloID'])
-gid = np.array(gal['HostHaloID'])
+cid = np.array(cat['Yang'])
+gid = np.array(gal['Yang'])
 
-rn = np.array(gal['Rn'])
+rn = np.array(gal['Rm'])
 mass = np.array(gal['mass'])
-t_infall = np.array(gal['t_cross'])/1e9
-
-# sfr classification
-sf   = np.array(gal['SF']).astype(int)
-qf   = (1-sf).astype(int)
+morph_type = np.array(gal['TType'])
+ssfr = np.array(gal['ssfr'])
 
 # sfr classification
 sf   = np.array(gal['SF']).astype(int)
 qf   = (1-sf).astype(int)
 
 # morphological classification
-# sp   = np.where(gal['TType'] > 0, 1, 0).astype(int)
-# ell  = np.where(gal['TType'] <=0, 1, 0).astype(int)
-s0   = check_non_valid_number(gal['BT'])
-# bulge= check_non_valid_number(gal['Pbulge'])
-# disk = check_non_valid_number(gal['Pdisk'])
-# bar  = check_non_valid_number(gal['PbarGZ2'])
-# merger= check_non_valid_number(gal['Pmerg'])
+sp   = np.where(gal['TType'] > 0, 1, 0).astype(int)
+ell  = np.where(gal['TType'] <=0, 1, 0).astype(int)
+s0   = check_non_valid_number(gal['Pbulge'])
+s0[np.isnan(s0)] = 0.
 
-# # bpt classification
-# composite = (np.array(gal['bpt']) == 3).astype(int)
-# lsf = ((np.array(gal['bpt']) == 1) | (np.array(gal['bpt']) == 2)).astype(int)
-# liners = (np.array(gal['bpt']) == 5).astype(int)
-# agn = (np.array(gal['bpt']) == 4).astype(int)
-# unclass = (np.array(gal['bpt']) == -1).astype(int)
+# b/t definition
+bt = np.array(gal['BT'])
+bt2 = np.where(bt>=0.5,1.,bt)
+bt2 = np.where(bt<0.5,0.,bt2)
 
-# orbital classification
-Pi   = np.array(gal['pinfall'])
-Po   = np.array(gal['porbital'])
-Pn   = np.array(gal['pinterloper'])
-m200 = np.array(gal['M200'])
+# dynamical probabilities
+Pi   = np.array(gal['p_infall'])
+Po   = np.array(gal['p_orbital'])
+Pn   = np.array(gal['p_interlopers'])
+m200 = np.array(gal['M200c'])
 
-# Po = np.where(gal['Rn']>=1.,0.,Po)
+Pf   = np.where(rn<2.,0.,Pn)
+Po   = np.where(rn>2.,0.,Po)
 
-# quenched, spiral, SO, bulge, disco, barra, merger
-# star forming, liners, AGN
-# mass > 10. & mass z limited
+# mask
+bt_mask = bt>=0.
 
-labels_mpr = ['quenching','sf','bulge']
-# labels_bpt = ['lsf', 'liners', 'agn', 'compos', 'unclas']
-
-mask_mpr = [qf, sf, s0]
+labels_mpr = ['quenching','sf','elliptical', 'spiral', 'bulge', 'bt']
+mask_mpr = [qf, sf, ell, sp, s0, bt2]
 
 print('Compute Fractions')
 print()
 ## Quenching Fraction
 ## i: infall, o: orbital, n: interlopers
-from utils import compute_fraction, quenching_fraction_excess, save_output_matrix, make_bins
-
 keys = list(chunks(gid, cid))
 
 # for each halo compute cluster, infall and interlopers fraction.
@@ -95,10 +70,12 @@ for l, p in zip(labels, probs):
     frac_o = np.array([compute_fraction2(Po[idx],p[idx]) for idx in keys]).T
     frac_i = np.array([compute_fraction2(Pi[idx],p[idx]) for idx in keys]).T
     frac_n = np.array([compute_fraction2(Pn[idx],p[idx]) for idx in keys]).T
+    frac_f = np.array([compute_fraction2(Pf[idx],p[idx]) for idx in keys]).T
  
     qfrac_oi = quenching_fraction_excess(frac_i, frac_o)
     qfrac_on = quenching_fraction_excess(frac_n, frac_o)
     qfrac_in = quenching_fraction_excess(frac_n, frac_i)
+    qfrac_if = quenching_fraction_excess(frac_f, frac_i)
     
     # save
     cat['fo_'+l] = frac_o[0]
@@ -107,6 +84,8 @@ for l, p in zip(labels, probs):
     cat['fi_'+l+'_err'] = frac_i[1]
     cat['fn_'+l] = frac_n[0]
     cat['fn_'+l+'_err'] = frac_n[1]
+    cat['ff_'+l] = frac_f[0]
+    cat['ff_'+l+'_err'] = frac_f[1]
     
     cat['qf1_'+l] = qfrac_oi[0]
     cat['qf1_'+l+'_err'] = qfrac_oi[1]
@@ -114,9 +93,11 @@ for l, p in zip(labels, probs):
     cat['qf2_'+l+'_err'] = qfrac_on[1]
     cat['qf3_'+l] = qfrac_in[0]
     cat['qf3_'+l+'_err'] = qfrac_in[1]
+    cat['qf4_'+l] = qfrac_if[0]
+    cat['qf4_'+l+'_err'] = qfrac_if[1]
 
 print('Save file')        
-cat.write(cluster_file_2,overwrite=True)
+cat.write(fl.cluster_frac_vl,overwrite=True)
 
 print()
 print('done!')

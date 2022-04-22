@@ -8,17 +8,18 @@ from compute_fractions import computeFraction
 
 ## set params
 nBoot = 1000
-run_name = 'volumeLimited'
+run_name = 'magTH'
 
 ## set bins
-msbins = np.linspace(9.05,11.7,50)
+msbins = np.linspace(10.35,11.7,50)
+# msbins = np.linspace(9.05,11.7,50)
 rbins = np.arange(0.,3.0,0.1)+0.1
 
 fl = FileLocs(dataset='sdss')
 gal0 = fl.load_catalogs('galaxy/main')
 
 mask  = (gal0['VLOS_MASK']).astype(bool)
-mask &= gal0['VOLUME_LIM_MASK'].astype(bool)
+mask &= gal0['MAG_TH_MASK'].astype(bool)
 
 gal = gal0[mask].copy()
 
@@ -59,24 +60,24 @@ bt_mask = bt>=0.
 q = computeFraction('quenching',path=fl.root,key=run_name)
 q.add_probabilities(qf,Po,Pi,Pn,rn)
 q.run_kde('smass', mass, msbins, write=True, nBootStrap=nBoot, bw=0.3)
-q.run_kde('radii', rn, rbins, write=True, nBootStrap=nBoot, bw=0.2,radial_cut=True)
+# q.run_kde('radii', rn, rbins, write=True, nBootStrap=nBoot, bw=0.2,radial_cut=True)
 
 q = computeFraction('elliptical',path=fl.root,key=run_name)
 q.add_probabilities(ell,Po,Pi,Pn,rn)
 q.run_kde('smass', mass, msbins, write=True, nBootStrap=nBoot, bw=0.3)
-q.run_kde('radii', rn, rbins, write=True, nBootStrap=nBoot, bw=0.2,radial_cut=True)
+# q.run_kde('radii', rn, rbins, write=True, nBootStrap=nBoot, bw=0.2,radial_cut=True)
 
 q = computeFraction('Bulge',path=fl.root,key=run_name)
 q.add_probabilities(s0,Po,Pi,Pn,rn)
 q.run_kde('smass', mass, msbins, write=True, nBootStrap=nBoot, bw=0.3)
-q.run_kde('radii', rn, rbins, write=True, nBootStrap=nBoot, bw=0.2,radial_cut=True)
+# q.run_kde('radii', rn, rbins, write=True, nBootStrap=nBoot, bw=0.2,radial_cut=True)
 
 # q = computeFraction('BT',path=fl.root,key=run_name)
 # q.add_probabilities(bt[bt_mask],Po[bt_mask],Pi[bt_mask],Pn[bt_mask],rn[bt_mask])
 # q.run_kde('smass', mass[bt_mask], msbins, write=True, nBootStrap=nBoot, bw=0.3)
 # q.run_kde('radii', rn[bt_mask], rbins, write=True, nBootStrap=nBoot, bw=0.2,radial_cut=True)
 
-q = computeFraction('BT_TH',path=fl.root,key=run_name)
+q = computeFraction('BT',path=fl.root,key=run_name)
 q.add_probabilities(bt2[bt_mask],Po[bt_mask],Pi[bt_mask],Pn[bt_mask],rn[bt_mask])
 q.run_kde('smass', mass[bt_mask], msbins, write=True, nBootStrap=nBoot, bw=0.3)
-q.run_kde('radii', rn[bt_mask], rbins, write=True, nBootStrap=nBoot, bw=0.2,radial_cut=True)
+# q.run_kde('radii', rn[bt_mask], rbins, write=True, nBootStrap=nBoot, bw=0.2,radial_cut=True)

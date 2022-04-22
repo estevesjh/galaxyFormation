@@ -31,8 +31,7 @@ class computeFraction:
         
         # compute fraction
         for i in range(nBootStrap):
-            df2 = df.dropna(subset=['p_orbital'], how='all', inplace=True)
-            vec = df2.sample(frac=1.0, replace=True).to_numpy().T
+            vec = df.sample(frac=1.0, replace=True).to_numpy().T
 
             xkeys, xmed = make_bins(vec[-1, :], xbins)
             
@@ -89,7 +88,7 @@ class computeFraction:
 
         # compute fraction
         for i in range(nBootStrap):
-            vec = df.to_numpy().T
+            vec = df.sample(frac=1.0, replace=True).to_numpy().T
             frac1 = compute_fraction_kde(xbins, vec[-1], vec[1], vec[0], bw=bw)
             frac2 = compute_fraction_kde(xbins, vec[-1], vec[2], vec[0], bw=bw)
             frac3 = compute_fraction_kde(xbins, vec[-1], vec[3], vec[0], bw=bw)

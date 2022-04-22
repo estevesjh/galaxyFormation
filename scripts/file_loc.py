@@ -13,6 +13,8 @@ class FileLocs(object):
             self.data_loc = self.root+'catalogs/SDSS/'
             
             self.cluster = self.data_loc + 'groupCatalog_Yang_deCarvalho2017.csv'
+            self.cluster_frac_vl = self.data_loc + 'groupCatalog_Yang_deCarvalho2017_frac_vl.csv'
+            self.cluster_frac_th = self.data_loc + 'groupCatalog_Yang_deCarvalho2017_frac_th.csv'
             self.cluster_raw = self.data_loc + 'groupCatalog_Yang_deCarvalho2017.fits'
             self.cluster_sdss = self.data_loc + 'groupCatalog_Yang_deCarvalho2017_toSDSS.csv'
             
@@ -22,7 +24,9 @@ class FileLocs(object):
         
             self.morphology = self.data_loc + 'DL_morphology_SDSS_DS18.fit'
 
-            self.datasets = {'cluster/raw': [self.cluster_raw,'fits'], 'cluster/main': [self.cluster,'csv'], 'cluster/sdss/': [self.cluster,'csv'],
+            self.datasets = {'cluster/raw': [self.cluster_raw,'fits'], 'cluster/main': [self.cluster,'csv'],
+                             'cluster/sdss': [self.cluster,'csv'], 'cluster/frac_vl': [self.cluster_frac_vl,'csv'],
+                             'cluster/frac_th': [self.cluster_frac_th,'csv'],
                              'galaxy/raw': [self.galaxy_raw, 'csv'], 'galaxy/main': [self.galaxy, 'csv']}
             
         if dataset=='tng':
