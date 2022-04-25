@@ -7,12 +7,24 @@ sys.path.append('./scripts')
 from utils import compute_fraction2, quenching_fraction_excess, chunks, check_non_valid_number
 from file_loc import FileLocs
 
-fl = FileLocs(dataset='sdss')
+# select dataset
+TNG = False
+volumeLimited = True
+
+dataset = 'sdss'
+if TNG: dataset = 'tng'
+
+fl = FileLocs(dataset=dataset)
 cat = fl.load_catalogs('cluster/main')
 gal0 = fl.load_catalogs('galaxy/main')
 
 mask  = (gal0['VLOS_MASK']).astype(bool)
-mask &= gal0['VOLUME_LIM_MASK'].astype(bool)
+mask &= gal0['mass']>=9.
+
+if volumeLimited:
+    mask &= gal0['VOLUME_LIM_MASK'].astype(bool)
+else:
+    mask &= gal0['MAG_TH_MASK'].astype(bool)
 
 gal = gal0[mask].copy()
 
@@ -23,7 +35,6 @@ gid = np.array(gal['Yang'])
 
 rn = np.array(gal['Rm'])
 mass = np.array(gal['mass'])
-morph_type = np.array(gal['TType'])
 ssfr = np.array(gal['ssfr'])
 
 # sfr classification
@@ -31,10 +42,12 @@ sf   = np.array(gal['SF']).astype(int)
 qf   = (1-sf).astype(int)
 
 # morphological classification
-sp   = np.where(gal['TType'] > 0, 1, 0).astype(int)
-ell  = np.where(gal['TType'] <=0, 1, 0).astype(int)
-s0   = check_non_valid_number(gal['Pbulge'])
-s0[np.isnan(s0)] = 0.
+if not TNG:
+    morph_type = np.array(gal['TType'])
+    sp   = np.where(gal['TType'] > 0, 1, 0).astype(int)
+    ell  = np.where(gal['TType'] <=0, 1, 0).astype(int)
+    s0   = check_non_valid_number(gal['Pbulge'])
+    s0[np.isnan(s0)] = 0.
 
 # b/t definition
 bt = np.array(gal['BT'])
@@ -53,8 +66,11 @@ Po   = np.where(rn>2.,0.,Po)
 # mask
 bt_mask = bt>=0.
 
-labels_mpr = ['quenching','sf','elliptical', 'spiral', 'bulge', 'bt']
-mask_mpr = [qf, sf, ell, sp, s0, bt2]
+labels_mpr = ['quenching','sf', 'bt']
+mask_mpr = [qf, sf, bt2]
+if not TNG:
+    mask_mpr += [ell, sp, s0]
+    labels_mpr += ['elliptical', 'spiral', 'bulge']
 
 print('Compute Fractions')
 print()
@@ -96,8 +112,11 @@ for l, p in zip(labels, probs):
     cat['qf4_'+l] = qfrac_if[0]
     cat['qf4_'+l+'_err'] = qfrac_if[1]
 
-print('Save file')        
-cat.write(fl.cluster_frac_vl,overwrite=True)
+print('Save file')
+outname = fl.cluster_frac_th
+if volumeLimited: outname = fl.cluster_frac_vl
+cat.write(outname,overwrite=True)
+print('Output name: %s'%outname)
 
 print()
 print('done!')

@@ -31,19 +31,36 @@ class FileLocs(object):
             
         if dataset=='tng':
             self.data_loc = self.root+'catalogs/TNG/'
-            self.hdf_fname_z0 = self.data_loc + 'TNG300-1_GalEvol_z0p00.hdf5'
-            self.hdf_fname_p = self.data_loc + 'TNG300-1_GalEvol_z0p00_post.csv'
-            self.cls_fname = self.data_loc + 'TNG300-1_GalEvol_z0p00_cluster_post.csv'
+            self.hdf_fname_z0 = self.data_loc + 'TNG300-1_GalEvol_z0p10.hdf5'
+            self.hdf_fname_p = self.data_loc + 'TNG300-1_GalEvol_z0p10_post.csv'
+            self.cls_fname = self.data_loc + 'TNG300-1_GalEvol_z0p10_cluster_post.csv'
+            
+            self.cluster_raw = self.data_loc + 'TNG300-1_GalEvol_z0p10.hdf5'
+            self.galaxy_raw = self.data_loc + 'TNG300-1_GalEvol_z0p10.hdf5'
+                              
+            self.cluster = self.data_loc + 'TNG300-1_GalEvol_z0p10.csv'
+            self.cluster_frac_vl = self.data_loc + 'TNG300-1_GalEvol_z0p10_frac_vl.csv'
+            self.cluster_frac_th = self.data_loc + 'TNG300-1_GalEvol_z0p10_frac_th.csv'
+            
+            self.galaxy = self.data_loc + 'TNG300-1_GalEvol_z0p00_pp.csv'
+            self.datasets = {'cluster/raw': [self.cluster_raw,'Halos'], 'cluster/main': [self.cluster,'csv'],
+                             'cluster/frac_vl': [self.cluster_frac_vl,'csv'], 'cluster/frac_th': [self.cluster_frac_th,'csv'],
+                             'galaxy/raw': [self.galaxy_raw, 'Subhalos'], 'galaxy/main': [self.galaxy, 'csv']}
             
             #self.cat = load_files(self.hdf_fname_z0,key='Halos')
             # self.gal0 = at.read(self.hdf_fname_p)
             # self.cat = at.read(self.cls_fname)
-
-    def load_catalogs(self, key):
+    
+    def load_catalogs(self, key, is_hdf=False):
         fname = self.datasets[key][0]
         dtype = self.datasets[key][1]
-        
-        if dtype == 'fits':
+
+        if is_hdf:
+            fname = self.datasets[key][0]
+            dtype = self.datasets[key][1]
+            data = load_files(fname,key=dtype)
+
+        if  dtype == 'fits':
             data = Table(getdata(fname))
         if dtype == 'csv':
             data = at.read(fname)
